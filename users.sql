@@ -35,7 +35,7 @@ CREATE TABLE `users` (
   `phone` varchar(20) NOT NULL,
   `username` varchar(50) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `verification_code` varchar(10) DEFAULT NULL,
+  `verification_code` varchar(100) DEFAULT NULL,
   `is_verified` tinyint(1) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `reset_token` varchar(32) DEFAULT NULL,

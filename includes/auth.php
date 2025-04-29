@@ -104,6 +104,51 @@ function loginUser($conn, $username, $password)
     exit;
 }
 
+function forgotPassword($conn, $email)
+{
+    // Cek apakah email ada
+    $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows == 0) {
+        throw new Exception("Email tidak ditemukan.");
+    }
+
+    // Generate reset token dan expiry
+    $resetToken = bin2hex(random_bytes(16)); // 32 karakter
+    $expiryTime = date('Y-m-d H:i:s', strtotime('+8 hour'));
+
+    // Simpan reset token ke database
+    $stmt = $conn->prepare("UPDATE users SET reset_token = ?, reset_token_expiry = ? WHERE email = ?");
+    $stmt->bind_param("sss", $resetToken, $expiryTime, $email);
+    $stmt->execute();
+    $stmt->close();
+
+    // Kirim email reset password
+    $mail = new PHPMailer(true);
+    try {
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
+        $mail->Username = 'aryaabdulmughni18@gmail.com'; // Email kamu
+        $mail->Password = 'yxaqmyiopxxhxymt'; // App Password kamu
+        $mail->SMTPSecure = 'tls';
+        $mail->Port = 587;
+
+        $mail->setFrom('aryaabdulmughni18@gmail.com', 'Reset Password');
+        $mail->addAddress($email);
+        $mail->Subject = 'Reset Password';
+        $mail->Body    = "Klik link berikut untuk reset password Anda: http://localhost/tugas-sqa-mail/pages/reset-password.php?token=$resetToken";
+
+        $mail->send();
+    } catch (Exception $e) {
+        throw new Exception("Gagal mengirim email reset password: {$mail->ErrorInfo}");
+    }
+}
+
+
 // Handler register di sini (misal POST dari form)
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'register') {
     try {
@@ -121,3 +166,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
         echo "Gagal: " . $e->getMessage();
     }
 }
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'forgot_password') {
+    try {
+        forgotPassword($conn, $_POST['email']);
+        header("Location: ../pages/forgot-password.php?success=1");
+        exit();
+    } catch (Exception $e) {
+        echo "Gagal: " . $e->getMessage();
+    }
+}
+
+if (isset($_GET['logout']) && $_GET['logout'] == 'true') {
+    session_start();
+    session_unset(); // Hapus semua session
+    session_destroy(); // Hancurkan session
+
+    header("Location: ../pages/login.php"); // Redirect ke halaman login
+    exit();
+}
+

@@ -1,13 +1,30 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+// session_start(); // Tambahkan ini untuk mulai session
 include '../includes/config.php';
 
 if (isset($_GET['code'])) {
     $code = $conn->real_escape_string($_GET['code']);
-    
-    $sql = "UPDATE users SET is_verified = 1 WHERE verification_code = '$code'";
-    
-    if ($conn->query($sql) === TRUE && $conn->affected_rows > 0) {
-        $message = "Email verified successfully! You can now login.";
+
+    // Cari user berdasarkan verification_code
+    $sql = "SELECT * FROM users WHERE verification_code = '$code' AND is_verified = 0";
+    $result = $conn->query($sql);
+
+    if ($result && $result->num_rows > 0) {
+        // Update status verified
+        $conn->query("UPDATE users SET is_verified = 1 WHERE verification_code = '$code'");
+
+        // Ambil data user
+        $user = $result->fetch_assoc();
+
+        // Set session login
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['email'] = $user['email'];
+
+        // Redirect langsung ke dashboard (atau halaman utama kamu)
+        header("Location: http://localhost/tugas-sqa-mail/pages/dashboard.php");
+        exit();
     } else {
         $message = "Invalid verification code or email already verified.";
     }
@@ -18,29 +35,3 @@ if (isset($_GET['code'])) {
     header("Location: login.php");
     exit();
 }
-?>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Verification</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-    <div class="container">
-        <div class="row justify-content-center mt-5">
-            <div class="col-md-6">
-                <div class="card shadow">
-                    <div class="card-body text-center">
-                        <h3 class="card-title mb-4">Email Verification</h3>
-                        <p><?php echo $message; ?></p>
-                        <a href="login.php" class="btn btn-primary">Go to Login</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>

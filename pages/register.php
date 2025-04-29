@@ -56,7 +56,7 @@
                             </div>
 
                             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                <a href="../index.php" class="btn btn-secondary me-md-2">Cancel</a>
+                                <a href="login.php" class="btn btn-secondary me-md-2">Cancel</a>
                                 <button type="submit" class="btn btn-primary" id="submitBtn">Create Account</button>
                             </div>
                         </form>
