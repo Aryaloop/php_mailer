@@ -1,6 +1,7 @@
 <?php
+
 include '../includes/config.php';
-include '../includes/bookmark_functions.php';
+
 // Cek kalau user belum login
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
@@ -22,6 +23,10 @@ if (!$result || $result->num_rows == 0) {
 
 $user = $result->fetch_assoc();
 
+// Konfigurasi API Film
+define('TMDB_API_KEY', '3097f4aed12eb128588745df1a12a5f0'); // Ganti dengan API key Anda
+define('TMDB_BASE_URL', 'https://api.themoviedb.org/3');
+define('TMDB_IMAGE_URL', 'https://image.tmdb.org/t/p/w500');
 
 // Fungsi untuk mendapatkan film populer
 function getPopularMovies($page = 1)
@@ -67,6 +72,15 @@ if (isset($movies_data['results'])) {
 $movie_details = null;
 if (isset($_GET['movie_id'])) {
     $movie_details = getMovieDetails($_GET['movie_id']);
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bookmark_action'])) {
+    $movie_id = intval($_POST['movie_id']);
+    if ($_POST['bookmark_action'] === 'add') {
+        addBookmark($_SESSION['user_id'], $movie_id, $_POST['movie_title'], $_POST['poster_path']);
+    } else {
+        removeBookmark($_SESSION['user_id'], $movie_id);
+    }
 }
 ?>
 
@@ -189,17 +203,6 @@ if (isset($_GET['movie_id'])) {
                                     <p><?php echo htmlspecialchars($movie_details['overview']); ?></p>
                                     <p><strong>Release Date:</strong> <?php echo htmlspecialchars($movie_details['release_date']); ?></p>
                                     <p><strong>Rating:</strong> <?php echo htmlspecialchars($movie_details['vote_average']); ?>/10</p>
-                                    <!-- TAMBAHKAN TOMBOL BOOKMARK DI SINI -->
-                                    <div class="mb-3">
-                                        <button class="btn <?= isBookmarked($_SESSION['user_id'], $movie_details['id']) ? 'btn-danger' : 'btn-outline-danger' ?> bookmark-btn"
-                                            data-movie-id="<?= $movie_details['id'] ?>"
-                                            data-movie-title="<?= htmlspecialchars($movie_details['title']) ?>"
-                                            data-poster-path="<?= $movie_details['poster_path'] ?>">
-                                            <i class="fas fa-bookmark"></i>
-                                            <?= isBookmarked($_SESSION['user_id'], $movie_details['id']) ? ' Bookmarked' : ' Bookmark' ?>
-                                        </button>
-                                    </div>
-
 
                                     <?php if (!empty($movie_details['videos']['results'])): ?>
                                         <h5 class="mt-4">Trailer</h5>
@@ -304,58 +307,6 @@ if (isset($_GET['movie_id'])) {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Di dashboard.php, sebelum </body> -->
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Handle bookmark buttons
-            document.querySelectorAll('.bookmark-btn').forEach(button => {
-                button.addEventListener('click', async function(e) {
-                    e.preventDefault();
-                    const button = this;
-                    const movieId = button.dataset.movieId;
-                    const movieTitle = button.dataset.movieTitle;
-                    const posterPath = button.dataset.posterPath;
-                    const isBookmarked = button.classList.contains('btn-danger');
-
-                    try {
-                        const response = await fetch('../includes/bookmark_handler.php', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                action: isBookmarked ? 'remove' : 'add',
-                                movie_id: movieId,
-                                movie_title: movieTitle,
-                                poster_path: posterPath
-                            })
-                        });
-
-                        const data = await response.json();
-
-                        if (data.success) {
-                            // Update button appearance
-                            if (isBookmarked) {
-                                button.classList.remove('btn-danger');
-                                button.classList.add('btn-outline-danger');
-                                button.innerHTML = '<i class="fas fa-bookmark"></i> Bookmark';
-                            } else {
-                                button.classList.remove('btn-outline-danger');
-                                button.classList.add('btn-danger');
-                                button.innerHTML = '<i class="fas fa-bookmark"></i> Bookmarked';
-                            }
-                        } else {
-                            alert(data.message || 'Error processing bookmark');
-                        }
-                    } catch (error) {
-                        console.error('Error:', error);
-                        alert('Failed to update bookmark');
-                    }
-                });
-            });
-        });
-    </script>
 </body>
 
 </html>

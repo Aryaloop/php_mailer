@@ -19,3 +19,23 @@ body {
     background-color: #0b5ed7;
     border-color: #0a58ca;
 }
+.bookmark-btn {
+    transition: all 0.3s ease;
+    min-width: 100px;
+}
+
+.bookmark-btn:hover {
+    transform: scale(1.05);
+}
+
+.movie-card {
+    position: relative;
+}
+
+.movie-poster {
+    transition: transform 0.3s;
+}
+
+.movie-poster:hover {
+    transform: scale(1.03);
+}

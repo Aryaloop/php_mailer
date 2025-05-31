@@ -40,7 +40,17 @@
 
                             <div class="mb-3">
                                 <label for="phone" class="form-label">Phone Number</label>
-                                <input type="tel" class="form-control" id="phone" name="phone" required>
+                                <input type="tel" class="form-control" id="phone" name="phone" pattern="[0-9]+" title="Masukkan hanya angka 0-9" required>
+                                <?php
+                                if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['phone'])) {
+                                    $phone = $_POST['phone'];
+
+                                    if (!preg_match('/^[0-9]+$/', $phone)) {
+                                        echo '<div class="text-danger mt-2">Nomor telepon hanya boleh angka!</div>';
+                                    }
+                                }
+                                ?>
+
                             </div>
 
                             <div class="row">

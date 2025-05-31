@@ -1,6 +1,12 @@
 <?php
-session_start();
+// includes/config.php
 
+session_start([
+    'cookie_httponly' => true,
+    'use_strict_mode' => true
+]);
+
+// Database Configuration
 $db_host = 'localhost';
 $db_user = 'root';
 $db_pass = '';
@@ -12,24 +18,33 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Email configuration (using PHPMailer)
+// TMDB Configuration
+define('TMDB_API_KEY', '3097f4aed12eb128588745df1a12a5f0');
+define('TMDB_BASE_URL', 'https://api.themoviedb.org/3');
+define('TMDB_IMAGE_URL', 'https://image.tmdb.org/t/p/w500');
+
+// Load PHPMailer dengan cara yang benar
+require_once __DIR__ . '/../vendor/autoload.php';
+
+// Tambahkan ini untuk membantu IDE mengenali class
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require '../vendor/autoload.php';
-
+/**
+ * Fungsi untuk mengirim email reset password
+ */
 function sendPasswordResetEmail($email, $reset_token) {
     $mail = new PHPMailer(true);
     
     try {
         // Server settings
         $mail->isSMTP();
-        $mail->Host       = 'smtp.gmail.com';
-        $mail->SMTPAuth   = true;
-        $mail->Username   = 'aryaabdulmughni@gmail.com';
-        $mail->Password   = 'yxaqmyiopxxhxymt';
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
+        $mail->Username = 'aryaabdulmughni@gmail.com';
+        $mail->Password = 'yxaqmyiopxxhxymt';
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port       = 587;
+        $mail->Port = 587;
 
         // Recipients
         $mail->setFrom('aryaabdulmughni18@gmail.com', 'Admin T Informatica');
@@ -38,48 +53,18 @@ function sendPasswordResetEmail($email, $reset_token) {
         // Content
         $mail->isHTML(true);
         $mail->Subject = 'Password Reset Request';
-        $mail->Body    = "<h2>Password Reset Request</h2>
-    <p>You requested to reset your password. Click the link below:</p>
-    <a href='http://localhost/tugas-sqa-mail/pages/reset-password.php?token=$reset_token' 
-       style='background: #007bff; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;'>
-       Reset Password
-    </a>
-    <p><small>Link expires in 1 hour.</small></p>
-    <p>If you didn't request this, please ignore this email.</p>";
+        $mail->Body = "
+            <h2>Password Reset Request</h2>
+            <p>You requested to reset your password. Click the link below:</p>
+            <a href='http://localhost/tugas-sqa-mail/pages/reset-password.php?token=$reset_token'>
+                Reset Password
+            </a>
+            <p><small>Link expires in 1 hour.</small></p>
+        ";
 
-        $mail->send();
-        return true;
+        return $mail->send();
     } catch (Exception $e) {
+        error_log("Email error: " . $e->getMessage());
         return false;
     }
 }
-// function sendVerificationEmail($email, $verification_code) {
-//     require '../vendor/autoload.php'; // Jika pakai PHPMailer
-    
-//     $mail = new PHPMailer(true);
-//     try {
-//         // SMTP Configuration
-//         $mail->isSMTP();
-//         $mail->Host       = 'smtp.gmail.com';
-//         $mail->SMTPAuth   = true;
-//         $mail->Username   = 'aryaabdulmughni18@gmail.com'; // Ganti dengan email Anda
-//         $mail->Password   = 'nfqc uxpb dpjt jnoa';    // Gunakan App Password
-//         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-//         $mail->Port       = 587;
-
-//         // Email Content
-//         $mail->setFrom('aryaabdulmughni18@gmail.com', 'Your App Name');
-//         $mail->addAddress($email);
-//         $mail->isHTML(true);
-//         $mail->Subject = 'Email Verification';
-//         $mail->Body    = "Klik link berikut untuk verifikasi: 
-//                          <a href='http://localhost/tugas-sqa-mail/pages/verify.php?code=$verification_code'>
-//                          Verify Email</a>";
-
-//         $mail->send();
-//         return true;
-//     } catch (Exception $e) {
-//         error_log("Email error: " . $mail->ErrorInfo);
-//         return false;
-//     }
-// }
