@@ -40,13 +40,13 @@
 
                             <div class="mb-3">
                                 <label for="phone" class="form-label">Phone Number</label>
-                                <input type="tel" class="form-control" id="phone" name="phone" pattern="[0-9]+" title="Masukkan hanya angka 0-9" required>
+                                <input type="tel" class="form-control" id="phone" name="phone" pattern="^\d{9,12}$" title="Masukkan 9 hingga 13 digit angka" required>
                                 <?php
                                 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['phone'])) {
                                     $phone = $_POST['phone'];
 
-                                    if (!preg_match('/^[0-9]+$/', $phone)) {
-                                        echo '<div class="text-danger mt-2">Nomor telepon hanya boleh angka!</div>';
+                                    if (!preg_match('/^\d{9,13}$/', $phone)) {
+                                        echo '<div class="text-danger mt-2">Nomor telepon harus terdiri dari 9 hingga 12 digit angka!</div>';
                                     }
                                 }
                                 ?>
@@ -61,7 +61,9 @@
 
                                 <div class="col-md-6 mb-3">
                                     <label for="password" class="form-label">Password</label>
-                                    <input type="password" class="form-control" id="password" name="password" required>
+                                    <input type="password" class="form-control" id="password" name="password"
+                                        title="Password must be at least 8 characters long, include an uppercase letter, a number, and a special character"
+                                        required>
                                 </div>
                             </div>
 
@@ -79,9 +81,28 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const form = document.querySelector('form');
+        const passwordInput = document.getElementById('password');
         const submitBtn = document.getElementById('submitBtn');
 
-        form.addEventListener('submit', function() {
+        form.addEventListener('submit', function(e) {
+            const password = passwordInput.value.trim();
+
+            // Cek minimal panjang
+            if (password.length < 8) {
+                e.preventDefault();
+                alert('Password must be at least 8 characters long!');
+                return;
+            }
+
+            // Cek kekuatan password (minimal 1 huruf besar, 1 angka, 1 simbol)
+            const strongPasswordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/;
+            if (!strongPasswordRegex.test(password)) {
+                e.preventDefault();
+                alert('Password must contain at least one uppercase letter, one number, and one special character.');
+                return;
+            }
+
+            // Disable tombol submit
             submitBtn.disabled = true;
             submitBtn.innerText = 'Please wait...';
         });
