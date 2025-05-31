@@ -15,8 +15,8 @@
             <div class="col-md-4">
                 <div class="card shadow">
                     <div class="card-body">
-                        <h3 class="card-title text-center mb-4">T Informatica - UKRI</h3>
-                        <p class="text-center text-muted">Software Quality - Dens 2025</p>
+                        <h3 class="card-title text-center mb-4">LOGIN</h3>
+                        <p class="text-center text-muted">Software Quality - 2025</p>
                         
                         <form action="../includes/auth.php" method="POST">
                             <input type="hidden" name="action" value="login">
