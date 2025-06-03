@@ -17,7 +17,7 @@ function registerUser($conn, $name, $email, $address, $phone, $username, $passwo
         $stmt->bind_param("ss", $email, $username);
         $stmt->execute();
         $stmt->store_result();
-        
+
         if ($stmt->num_rows > 0) {
             throw new Exception("Email atau username sudah digunakan.");
         }
@@ -56,7 +56,7 @@ function sendVerificationEmail($toEmail, $verificationCode)
         $mail->Host = 'smtp.gmail.com'; // SMTP server Gmail
         $mail->SMTPAuth = true;
         $mail->Username = 'aryaabdulmughni18@gmail.com'; // Ganti dengan email kamu
-        $mail->Password = 'yxaqmyiopxxhxymt'; // Ganti dengan password/aplikasi key kamu
+        $mail->Password = 'yxaqmyiopxxhxymt'; // Ganti dengan app password kamu
         $mail->SMTPSecure = 'tls';
         $mail->Port = 587;
 
@@ -70,15 +70,14 @@ function sendVerificationEmail($toEmail, $verificationCode)
         throw new Exception("Email tidak dapat dikirim. Mailer Error: {$mail->ErrorInfo}");
     }
 }
+
 function loginUser($conn, $username, $password)
 {
-    // session_start(); // <- Penting untuk mulai session
-
     $stmt = $conn->prepare("SELECT id, password, is_verified FROM users WHERE username = ?");
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $result = $stmt->get_result();
-    
+
     if ($result->num_rows === 0) {
         throw new Exception("Username tidak ditemukan.");
     }
@@ -96,6 +95,7 @@ function loginUser($conn, $username, $password)
     }
 
     // Simpan data login ke session
+    session_start();
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['username'] = $username;
 
@@ -117,7 +117,7 @@ function forgotPassword($conn, $email)
     }
 
     // Generate reset token dan expiry
-    $resetToken = bin2hex(random_bytes(16)); // 32 karakter
+    $resetToken = bin2hex(random_bytes(16));
     $expiryTime = date('Y-m-d H:i:s', strtotime('+8 hour'));
 
     // Simpan reset token ke database
@@ -132,8 +132,8 @@ function forgotPassword($conn, $email)
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = 'aryaabdulmughni18@gmail.com'; // Email kamu
-        $mail->Password = 'yxaqmyiopxxhxymt'; // App Password kamu
+        $mail->Username = 'aryaabdulmughni18@gmail.com';
+        $mail->Password = 'yxaqmyiopxxhxymt';
         $mail->SMTPSecure = 'tls';
         $mail->Port = 587;
 
@@ -148,19 +148,31 @@ function forgotPassword($conn, $email)
     }
 }
 
-
-// Handler register di sini (misal POST dari form)
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'register') {
-    try {
-        $message = registerUser($conn, $_POST['name'], $_POST['email'], $_POST['address'], $_POST['phone'], $_POST['username'], $_POST['password']);
-        echo $message;
-    } catch (Exception $e) {
-        echo "Gagal: " . $e->getMessage();
-    }
-}
+// ==========================
+// === HANDLER SECTION ====
+// ==========================
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'login') {
     try {
+        // === Verifikasi reCAPTCHA ===
+        $secret = '6Ld0BVErAAAAAKnG4rYaHZiT8Qbo5bHFe7p0HdZO';
+        $captcha_response = $_POST['g-recaptcha-response'] ?? '';
+
+        if (empty($captcha_response)) {
+            header("Location: ../pages/login.php?error=empty");
+            exit();
+        }
+
+        $verify_response = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret={$secret}&response={$captcha_response}&remoteip=" . $_SERVER['REMOTE_ADDR']);
+        $response_data = json_decode($verify_response);
+
+        if (!$response_data->success) {
+            header("Location: ../pages/login.php?error=captcha");
+            exit();
+        }
+        // === End reCAPTCHA ===
+
+        // Lanjut login jika captcha sukses
         loginUser($conn, $_POST['username'], $_POST['password']);
     } catch (Exception $e) {
         echo "Gagal: " . $e->getMessage();
@@ -179,10 +191,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
 
 if (isset($_GET['logout']) && $_GET['logout'] == 'true') {
     session_start();
-    session_unset(); // Hapus semua session
-    session_destroy(); // Hancurkan session
-
-    header("Location: ../pages/login.php"); // Redirect ke halaman login
+    session_unset();
+    session_destroy();
+    header("Location: ../pages/login.php");
     exit();
 }
-
