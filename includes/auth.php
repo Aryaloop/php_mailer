@@ -149,11 +149,16 @@ function forgotPassword($conn, $email)
     }
 }
 
-// ==========================
-// === HANDLER SECTION ====
-// ==========================
 
-// 
+// Handler register di sini (misal POST dari form)
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'register') {
+    try {
+        $message = registerUser($conn, $_POST['name'], $_POST['email'], $_POST['address'], $_POST['phone'], $_POST['username'], $_POST['password']);
+        echo $message;
+    } catch (Exception $e) {
+        echo "Gagal: " . $e->getMessage();
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'login') {
     try {
