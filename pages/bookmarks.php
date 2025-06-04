@@ -101,7 +101,7 @@ $bookmarks = getUserBookmarks($user_id);
                             </div>
                         <?php else: ?>
                             <div class="alert alert-info">
-                                <i class="fas fa-info-circle"></i> You haven't bookmarked any movies yet.
+                                <i class="fas fa-info-circle"></i> Tidak ada bookmark yang ditambahkan.
                             </div>
                         <?php endif; ?>
                     </div>

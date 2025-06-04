@@ -3,12 +3,12 @@ include '../includes/config.php';
 
 if (isset($_GET['token'])) {
     $token = $conn->real_escape_string($_GET['token']);
-    
+
     // Check if token is valid and not expired
     $sql = "SELECT * FROM users WHERE reset_token = '$token' 
             AND reset_token_expiry > NOW()";
     $result = $conn->query($sql);
-    
+
     if ($result->num_rows == 0) {
         $error = "Invalid or expired reset token.";
     }
@@ -18,12 +18,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] == 'reset_password') {
         $token = $conn->real_escape_string($_POST['token']);
         $password = password_hash($_POST['password'], PASSWORD_BCRYPT);
-        
+
         // Update password and clear reset token
         $sql = "UPDATE users SET password = '$password', 
                 reset_token = NULL, reset_token_expiry = NULL 
                 WHERE reset_token = '$token'";
-        
+
         if ($conn->query($sql) === TRUE) {
             $success = "Password has been reset successfully! You can now login.";
         } else {
@@ -35,12 +35,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action'])) {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reset Password - T Informatica</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body class="bg-light">
     <div class="container">
         <div class="row justify-content-center mt-5">
@@ -48,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action'])) {
                 <div class="card shadow">
                     <div class="card-body">
                         <h3 class="card-title text-center mb-4">Reset Password</h3>
-                        
+
                         <?php if (isset($error)): ?>
                             <div class="alert alert-danger"><?php echo $error; ?></div>
                             <div class="text-center">
@@ -63,17 +65,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action'])) {
                             <form action="reset-password.php" method="POST">
                                 <input type="hidden" name="action" value="reset_password">
                                 <input type="hidden" name="token" value="<?php echo $token; ?>">
-                                
+
                                 <div class="mb-3">
                                     <label for="password" class="form-label">New Password</label>
                                     <input type="password" class="form-control" id="password" name="password" required>
                                 </div>
-                                
+
                                 <div class="mb-3">
                                     <label for="confirm_password" class="form-label">Confirm Password</label>
                                     <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
                                 </div>
-                                
+
                                 <button type="submit" class="btn btn-primary w-100">Reset Password</button>
                             </form>
                         <?php endif; ?>
@@ -89,17 +91,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action'])) {
         document.querySelector('form').addEventListener('submit', function(e) {
             const password = document.getElementById('password').value;
             const confirm_password = document.getElementById('confirm_password').value;
-            
+
+            // Regex untuk validasi: minimal 8 karakter, ada huruf besar, angka, dan simbol
+            const passwordPattern = /^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+
             if (password !== confirm_password) {
                 e.preventDefault();
                 alert('Passwords do not match!');
+                return;
             }
-            
-            if (password.length < 8) {
+
+            if (!passwordPattern.test(password)) {
                 e.preventDefault();
-                alert('Password must be at least 8 characters long!');
+                alert('Password harus minimal 8 karakter, mengandung huruf besar, angka, dan simbol.');
+                return;
             }
         });
     </script>
+
 </body>
+
 </html>

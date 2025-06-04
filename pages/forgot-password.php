@@ -17,7 +17,7 @@
                         <h3 class="card-title text-center mb-4">Forgot Password</h3>
                         
                         <?php if (isset($_GET['success'])): ?>
-                            <div class="alert alert-success">Password reset link has been sent to your email!</div>
+                            <div class="alert alert-success">Password reset link telah dikirim melalui email, cek email untuk verifikasi!</div>
                         <?php endif; ?>
                         
                         <form action="../includes/auth.php" method="POST">
